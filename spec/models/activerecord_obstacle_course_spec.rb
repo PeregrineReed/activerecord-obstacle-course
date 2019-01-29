@@ -81,6 +81,8 @@ describe 'ActiveRecord Obstacle Course' do
     # ------------------ Using ActiveRecord ----------------------
     # Solution goes here
     # Your solution should not contain the ID of the order anywhere
+    max_amt = Order.maximum(:amount)
+    order_id = Order.find_by(amount: max_amt).id
     # ------------------------------------------------------------
 
     # Expectation
@@ -99,7 +101,7 @@ describe 'ActiveRecord Obstacle Course' do
     # ------------------------------------------------------------
 
     # ------------------ Using ActiveRecord ----------------------
-    # Solution goes here
+    # Solution goes here 
     # ------------------------------------------------------------
 
     # Expectation
