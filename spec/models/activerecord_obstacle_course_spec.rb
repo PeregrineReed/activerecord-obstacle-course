@@ -86,6 +86,7 @@ describe 'ActiveRecord Obstacle Course' do
     # Your solution should not contain the ID of the order anywhere
     max_amt = Order.maximum(:amount)
     order_id = Order.find_by(amount: max_amt).id
+    # order_id = Order.select(:id).order(amount: :desc).limit(1).first.id
     # ------------------------------------------------------------
 
     # Expectation
@@ -105,7 +106,8 @@ describe 'ActiveRecord Obstacle Course' do
 
     # ------------------ Using ActiveRecord ----------------------
     # Solution goes here
-    Order.count("amount = 500 OR amount = 700")
+    orders_of_500_and_700 = Order.where(amount: [500, 700])
+    orders_of_700_and_1000 = Order.where(amount: [700, 1000])
     # ------------------------------------------------------------
 
     # Expectation
@@ -154,7 +156,7 @@ describe 'ActiveRecord Obstacle Course' do
 
     # ------------------ Using ActiveRecord ----------------------
     # Solution goes here
-    orders_between_700_and_1000 = Order.where('amount >= 700 AND amount <= 1000')
+    orders_between_700_and_1000 = Order.where(amount: 700..1000)
     # ------------------------------------------------------------
 
     # Expectation
@@ -170,7 +172,7 @@ describe 'ActiveRecord Obstacle Course' do
 
     # ------------------ Using ActiveRecord ----------------------
     # Solution goes here
-    orders_less_than_550 = Order.where('amount < 550')
+    orders_less_than_550 = Order.where('amount < ?', 550)
     # ------------------------------------------------------------
 
     # Expectation
@@ -263,7 +265,7 @@ describe 'ActiveRecord Obstacle Course' do
 
     # ------------------ Using ActiveRecord ----------------------
     # Solution goes here
-    items = Item.
+    items = Item.where.not(id: items_not_included)
     # ------------------------------------------------------------
 
     # Expectation
@@ -280,6 +282,8 @@ describe 'ActiveRecord Obstacle Course' do
 
     # ------------------ Using ActiveRecord ----------------------
     # Solution goes here
+    # grouped_items = @order_3.items.group(:name)
+    grouped_items = order.items.order(:name)
     # ------------------------------------------------------------
 
     # Expectation
@@ -333,7 +337,7 @@ describe 'ActiveRecord Obstacle Course' do
 
     # ------------------ Using ActiveRecord ----------------------
     # Solution goes here
-
+    names = Order.joins(:items).pluck(:name)
     # ------------------------------------------------------------
 
     # Expectation
@@ -371,6 +375,7 @@ describe 'ActiveRecord Obstacle Course' do
 
     # ------------------ Using ActiveRecord ----------------------
     # Solution goes here
+    users = User.joins(:order_items).where(order_items: {item_id: @item_8}).distinct.pluck(:name)
     # ------------------------------------------------------------
 
     # Expectation
@@ -387,6 +392,7 @@ describe 'ActiveRecord Obstacle Course' do
 
     # ------------------ Using ActiveRecord ----------------------
     # Solution goes here
+    names = Order.last.items.order(:id).pluck(:name)
     # ------------------------------------------------------------
 
     # Expectation
@@ -411,6 +417,7 @@ describe 'ActiveRecord Obstacle Course' do
 
     # ------------------ Using ActiveRecord ----------------------
     # Solution goes here
+    
     # ------------------------------------------------------------
 
     # Expectation
