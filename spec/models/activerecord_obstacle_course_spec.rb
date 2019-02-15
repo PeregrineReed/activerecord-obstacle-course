@@ -585,20 +585,23 @@ describe 'ActiveRecord Obstacle Course' do
     expected_result = ['Thing 1', 'Thing 2', 'Thing 3', 'Thing 4', 'Thing 5', 'Thing 6', 'Thing 7', 'Thing 9', 'Thing 10']
 
     # ----------------------- Using Ruby -------------------------
-    items = Item.all
-
-    ordered_items = items.map do |item|
-      item if item.orders.present?
-    end.compact
-
-    ordered_items_names = ordered_items.map(&:name)
-    ordered_items_names.sort_by! { |x| x[/\d+/].to_i }
+    # items = Item.all
+    #
+    # ordered_items = items.map do |item|
+    #   item if item.orders.present?
+    # end.compact
+    #
+    # ordered_items_names = ordered_items.map(&:name)
+    # ordered_items_names.sort_by! { |x| x[/\d+/].to_i }
     # ------------------------------------------------------------
 
     # ------------------ ActiveRecord Solution ----------------------
     # Solution goes here
     # When you find a solution, experiment with adjusting your method chaining
     # Which ones are you able to switch around without relying on Ruby's Enumerable methods?
+    ordered_items_names = Item.joins(:orders).group(:name).order(:id).pluck(:name)
+    #group and order can be switched, I've put group first as it narrows the number of items
+    #then order them after they have been grouped
     # ---------------------------------------------------------------
 
     # Expectations
@@ -606,7 +609,7 @@ describe 'ActiveRecord Obstacle Course' do
     expect(ordered_items_names).to_not include(unordered_items)
   end
 
-  xit '27. returns a table of information for all users orders' do
+  it '27. returns a table of information for all users orders' do
     custom_results = [@user_3, @user_1, @user_2]
 
     # using a single ActiveRecord call, fetch a joined object that mimics the
@@ -618,7 +621,10 @@ describe 'ActiveRecord Obstacle Course' do
     # Sal        |         5
 
     # ------------------ ActiveRecord Solution ----------------------
-    # custom_results =
+    custom_results = User.joins(:orders)
+                         .select('users.*, COUNT(user_id) AS total_order_count')
+                         .group(:user_id)
+                         .order(:name)
     # ---------------------------------------------------------------
 
     expect(custom_results[0].name).to eq(@user_2.name)
@@ -629,7 +635,7 @@ describe 'ActiveRecord Obstacle Course' do
     expect(custom_results[2].total_order_count).to eq(5)
   end
 
-  xit '28. returns a table of information for all users items' do
+  it '28. returns a table of information for all users items' do
     custom_results = [@user_2, @user_3, @user_1]
 
     # using a single ActiveRecord call, fetch a joined object that mimics the
@@ -641,7 +647,10 @@ describe 'ActiveRecord Obstacle Course' do
     # Ian        |         20
 
     # ------------------ ActiveRecord Solution ----------------------
-    # custom_results =
+    custom_results = User.joins(:items)
+                         .select('users.*, COUNT(items.id) AS total_item_count')
+                         .group(:user_id)
+                         .order(name: :desc)
     # ---------------------------------------------------------------
 
     expect(custom_results[0].name).to eq(@user_3.name)
@@ -652,7 +661,7 @@ describe 'ActiveRecord Obstacle Course' do
     expect(custom_results[2].total_item_count).to eq(20)
   end
 
-  xit '29. returns a table of information for all users orders and item counts' do
+  it '29. returns a table of information for all users orders and item counts' do
     # using a single ActiveRecord call, fetch a joined object that mimics the
     # following table of information:
     # --------------------------------------------------------------------------
@@ -687,7 +696,15 @@ describe 'ActiveRecord Obstacle Course' do
     # how will you turn this into the proper ActiveRecord commands?
 
     # ------------------ ActiveRecord Solution ----------------------
-    # data = []
+    # User.alias_attribute :user_name, :name
+    # Order.alias_attribute :order_id, :id
+    data = User.joins(orders: :order_items)
+               .select("orders.id AS order_id,
+                        users.name AS user_name,
+                        orders.amount / count(order_items.id) AS avg_item_cost")
+               .group(:user_name, :order_id)
+               .order("users.name DESC, orders.id ASC")
+
     # ---------------------------------------------------------------
 
     expect([data[0].user_name,data[0].order_id,data[0].avg_item_cost]).to eq([@user_3.name, @order_3.id, 125])
@@ -707,7 +724,7 @@ describe 'ActiveRecord Obstacle Course' do
     expect([data[14].user_name,data[14].order_id,data[14].avg_item_cost]).to eq([@user_2.name, @order_14.id, 225])
   end
 
-  xit '30. returns the names of items that have been ordered without n+1 queries' do
+  it '30. returns the names of items that have been ordered without n+1 queries' do
     # What is an n+1 query?
     # This video is older, but the concepts explained are still relevant:
     # http://railscasts.com/episodes/372-bullet
@@ -718,7 +735,7 @@ describe 'ActiveRecord Obstacle Course' do
     Bullet.start_request
 
     # ------------------------------------------------------
-    orders = Order.all # Edit only this line
+    orders = Order.includes(:items) # Edit only this line
     # ------------------------------------------------------
 
     # Do not edit below this line
